@@ -1,0 +1,126 @@
+---
+- name: Configure EKS and IAM Identity Mapping
+  hosts: tag_eks_master_server
+  gather_facts: yes
+  
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install unzip and curl
+      apt:
+        name:
+          - unzip
+          - curl
+
+    - name: Download and install kubectl
+      shell: |
+        sudo curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+        sudo chmod +x ./kubectl
+        sudo mkdir -p /home/ubuntu/bin
+        sudo mv ./kubectl /home/ubuntu/bin/
+        echo 'export PATH=/home/ubuntu/bin:$PATH' >> /home/ubuntu/.bashrc
+        source /home/ubuntu/.bashrc
+      args:
+        executable: /bin/bash
+
+    - name: Download and install eksctl
+      shell: |
+        sudo curl -sLO "https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_Linux_amd64.tar.gz"
+        sudo tar -xzf eksctl_Linux_amd64.tar.gz
+        sudo mv eksctl /usr/local/bin
+        sudo rm -rf eksctl_Linux_amd64.tar.gz
+      args:
+        executable: /bin/bash
+    
+    - name: Check if AWS CLI is installed
+      shell: aws --version
+      args:
+        executable: /bin/bash
+      register: awscli_version_output
+      changed_when: false
+      ignore_errors: true
+
+    - name: Download AWS CLI v2 installer
+      shell: "curl 'https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip' -o 'awscliv2.zip'"
+      args:
+        creates: "awscliv2.zip"
+      when: awscli_version_output.rc != 0
+
+    - name: Unzip installer
+      shell: "unzip awscliv2.zip"
+      when: awscli_version_output.rc != 0
+
+    - name: Run AWS CLI v2 installer
+      shell: "./aws/install"
+      when: awscli_version_output.rc != 0
+   
+    - name: Remove installer files
+      shell: "rm -rf awscliv2.zip"
+      when: awscli_version_output.rc != 0
+
+    - name: Check AWS CLI version
+      command: "aws --version"
+      register: aws_version
+
+    - name: Display installed AWS CLI version
+      debug:
+        var: aws_version.stdout
+
+    - name: Set AWS credentials
+      command: aws configure set {{ item.key }} "{{ item.value }}"
+      loop:
+        - { key: "aws_access_key_id", value: "{{ aws_access_key }}" }
+        - { key: "aws_secret_access_key", value: "{{ aws_secret_key }}" }
+        - { key: "region", value: "{{ aws_region }}" }
+      vars:
+        aws_access_key: "AKIA6GIGQKYOOJBU32XN"
+        aws_secret_key: "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"
+        aws_region: "ap-south-1"
+
+    - name: Get AWS caller identity
+      command: aws sts get-caller-identity
+      register: caller_identity
+
+    - name: Display caller identity information
+      debug:
+        var: caller_identity.stdout
+
+    - name: Download EKS config YAML
+      shell: "curl 'https://s3.us-west-2.amazonaws.com/amazon-eks/docs/eks-console-full-access.yaml' -o 'eks-config.yaml'"
+      args:
+        creates: "eks-config.yaml"
+
+    - name: Update kubeconfig
+      command: "aws eks update-kubeconfig --name eks-cluster --region ap-south-1"
+      
+    - name: Apply Kubernetes config
+      shell: "/home/ubuntu/bin/kubectl apply -f eks-config.yaml"
+
+    - name: Create IAM Identity Mapping
+      command: eksctl create iamidentitymapping --cluster eks-cluster --region=ap-south-1 --arn arn:aws:iam::975508100636:user/EksUser --group eks-console-dashboard-full-access-group --no-duplicate-arns
+      
+    - name: Get IAM Identity Mapping
+      command: eksctl get iamidentitymapping --cluster eks-cluster --region=ap-south-1
+      register: iam_mapping_result
+
+    - name: Display IAM Identity Mapping Result
+      debug:
+        var: iam_mapping_result.stdout
+
+    - name: Get EKS Nodes
+      command: /home/ubuntu/bin/kubectl get nodes
+      register: eks_nodes_result
+
+    - name: Display EKS Nodes
+      debug:
+        var: eks_nodes_result.stdout
+
+    - name: Get EKS Services
+      command: /home/ubuntu/bin/kubectl get svc
+      register: eks_services_result
+
+    - name: Display EKS Services
+      debug:
+        var: eks_services_result.stdout

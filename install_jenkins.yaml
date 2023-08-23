@@ -1,0 +1,50 @@
+---
+- name: Install Jenkins Manually and Get initialAdminPassword
+  hosts: tag_jenkins_master_server
+  become: yes
+  become_method: sudo
+  gather_facts: yes
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+      
+    - name: Install OpenJDK
+      apt:
+        name: openjdk-11-jdk   # Change this to the appropriate OpenJDK version you want
+        state: present
+
+    - name: Download Jenkins APT key
+      shell: |
+        curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key | sudo tee \
+        /usr/share/keyrings/jenkins-keyring.asc > /dev/null
+
+    - name: Add Jenkins APT repository
+      shell: |
+        echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
+        https://pkg.jenkins.io/debian-stable binary/ | sudo tee \
+        /etc/apt/sources.list.d/jenkins.list > /dev/null
+
+    - name: Update APT cache
+      apt:
+        update_cache: yes
+
+    - name: Install Jenkins
+      apt:
+        name: jenkins
+        state: present
+
+    - name: Enable Jenkins service
+      shell: sudo systemctl enable jenkins
+
+    - name: Start Jenkins service
+      shell: sudo systemctl start jenkins
+
+    - name: Get initialAdminPassword
+      shell: cat /var/lib/jenkins/secrets/initialAdminPassword
+      register: initial_admin_password
+
+    - name: Display initialAdminPassword
+      debug:
+        var: initial_admin_password.stdout
