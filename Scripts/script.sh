@@ -27,8 +27,8 @@ unzip terraform_${TERRAFORM_LATEST_VERSION}_linux_amd64.zip
 sudo mv terraform /usr/local/bin
 
 # Read AWS access key and secret key from provision.tf
-AWS_ACCESS_KEY="AKIA6GIGQKYOPH5PYIP3"
-AWS_SECRET_KEY="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"
+AWS_ACCESS_KEY="<access_key>"
+AWS_SECRET_KEY="<secret_key>"
 
 # Configure AWS CLI
 echo -e "$AWS_ACCESS_KEY\n$AWS_SECRET_KEY\nap-south-1\njson" | aws configure
