@@ -55,8 +55,8 @@
 
     - name: Docker login to Docker Hub
       docker_login:
-        username: prajwal1691
-        password: Prajwal@91
+        username: <user_name>
+        password: <password>
 
     - name: Debugging
       debug:
