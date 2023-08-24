@@ -29,8 +29,8 @@ aws --version
 sleep 5  # Sleep for 5 seconds
 
 # Read AWS access key and secret key from provision.tf
-AWS_ACCESS_KEY="AKIA6GIGQKYOOJBU32XN"
-AWS_SECRET_KEY="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"
+AWS_ACCESS_KEY="<access_key>"
+AWS_SECRET_KEY="<secret_key>"
 
 # Configure AWS CLI
 echo -e "$AWS_ACCESS_KEY\n$AWS_SECRET_KEY\nap-south-1\njson" | aws configure
@@ -58,8 +58,8 @@ terraform fmt
 # Validate Terraform configuration
 terraform validate
 
-AWS_ACCESS_KEY="AKIA6GIGQKYOOJBU32XN"
-AWS_SECRET_KEY="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"
+AWS_ACCESS_KEY="<access_key>"
+AWS_SECRET_KEY="<secret_key>"
 
 # Configure AWS CLI
 echo -e "$AWS_ACCESS_KEY\n$AWS_SECRET_KEY\nap-south-1\njson" | aws configure
