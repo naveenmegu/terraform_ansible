@@ -75,9 +75,9 @@
         - { key: "aws_secret_access_key", value: "{{ aws_secret_key }}" }
         - { key: "region", value: "{{ aws_region }}" }
       vars:
-        aws_access_key: "AKIA6GIGQKYOOJBU32XN"
-        aws_secret_key: "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"
-        aws_region: "ap-south-1"
+        aws_access_key: <access_key>
+        aws_secret_key: <security_key>
+        aws_region: <region>
 
     - name: Get AWS caller identity
       command: aws sts get-caller-identity
